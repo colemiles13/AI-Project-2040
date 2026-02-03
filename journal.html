@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Analog Anchor | Digital Diary Website</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #050505;
+            --section-bg: #0f0f0f;
+            --text-main: #e0e0e0;
+            --accent-cyan: #00f3ff;
+            --accent-amber: #ffb000;
+            --accent-red: #ff3333;
+            --font-display: 'JetBrains Mono', monospace;
+            --font-body: 'Inter', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            margin: 0;
+            overflow-x: hidden;
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            line-height: 1.6;
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none;
+            z-index: 999;
+            opacity: 0.4; 
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(5, 5, 5, 0.95);
+            border-bottom: 1px solid var(--accent-cyan);
+            padding: 15px 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+            font-family: var(--font-display);
+        }
+
+        .navbar a {
+            color: #888;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .navbar a:hover {
+            color: #000;
+            background: var(--accent-cyan);
+            box-shadow: 0 0 15px var(--accent-cyan);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 100px auto 0 auto;
+            padding: 20px;
+        }
+
+        .section-card {
+            background: linear-gradient(145deg, #0a0a0a, #111);
+            border: 1px solid #333;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+            padding: 60px;
+            margin-bottom: 80px;
+            position: relative;
+            clip-path: polygon(
+                20px 0, 100% 0, 
+                100% calc(100% - 20px), calc(100% - 20px) 100%, 
+                0 100%, 0 20px
+            );
+            border-left: 4px solid var(--accent-cyan);
+            transition: transform 0.3s ease;
+        }
+
+        .section-card:hover {
+            border-left-color: var(--accent-amber);
+            box-shadow: 0 15px 50px rgba(0, 243, 255, 0.1);
+        }
+
+        /* Encryption Lock Styling */
+        .encrypted-lock {
+            text-align: center;
+            padding: 40px;
+            background: repeating-linear-gradient(
+                45deg,
+                rgba(255, 51, 51, 0.05),
+                rgba(255, 51, 51, 0.05) 10px,
+                rgba(0, 0, 0, 0.2) 10px,
+                rgba(0, 0, 0, 0.2) 20px
+            );
+            border: 1px dashed var(--accent-red);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .encrypted-lock:hover {
+            background: rgba(255, 51, 51, 0.1);
+            box-shadow: 0 0 20px rgba(255, 51, 51, 0.2);
+        }
+
+        .lock-icon {
+            font-size: 3rem;
+            color: var(--accent-red);
+            margin-bottom: 10px;
+            animation: pulse 1.5s infinite;
+        }
+
+        .lock-text {
+            font-family: var(--font-display);
+            color: var(--accent-red);
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+
+        .decrypt-btn {
+            margin-top: 20px;
+            background: transparent;
+            border: 2px solid var(--accent-red);
+            color: var(--accent-red);
+            padding: 10px 30px;
+            font-family: var(--font-display);
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.3s;
+        }
+
+        .encrypted-lock:hover .decrypt-btn {
+            background: var(--accent-red);
+            color: #000;
+        }
+
+        /* Hidden Content Styling */
+        .entry-data {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .entry-data.active {
+            display: grid; /* Matches .grid-2 style */
+            opacity: 1;
+            animation: textScramble 0.5s ease-out;
+        }
+
+        @keyframes textScramble {
+            0% { filter: blur(10px); opacity: 0; }
+            50% { filter: blur(5px); opacity: 0.5; }
+            100% { filter: blur(0); opacity: 1; }
+        }
+
+        h1 {
+            font-family: var(--font-display);
+            font-size: 3.5rem;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            margin: 0 0 15px 0;
+            text-align: center;
+            letter-spacing: 3px;
+            position: relative;
+            animation: glitch 4s infinite;
+            text-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+        }
+
+        @keyframes glitch {
+            0% { text-shadow: 2px 2px var(--accent-red), -2px -2px var(--accent-amber); }
+            2% { text-shadow: -2px 2px var(--accent-red), 2px -2px var(--accent-amber); transform: translate(1px, -1px); }
+            4% { text-shadow: 2px -2px var(--accent-red), -2px 2px var(--accent-amber); transform: translate(-1px, 1px); }
+            6% { text-shadow: 0 0 15px rgba(0, 243, 255, 0.4); transform: translate(0, 0); }
+            100% { text-shadow: 0 0 15px rgba(0, 243, 255, 0.4); transform: translate(0, 0); }
+        }
+
+        h2 {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            color: #fff;
+            border-bottom: 1px solid #333;
+            padding-bottom: 15px;
+            margin-top: 0;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            letter-spacing: 1px;
+        }
+
+        .section-number {
+            font-size: 0.9rem;
+            color: var(--accent-amber);
+            border: 1px solid var(--accent-amber);
+            padding: 5px 10px;
+            border-radius: 4px;
+            background: rgba(255, 176, 0, 0.1);
+        }
+
+        p {
+            font-family: var(--font-body);
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 25px;
+            color: #d4d4d4;
+            font-weight: 300;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 60px;
+            align-items: start;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2, .entry-data.active {
+                grid-template-columns: 1fr;
+            }
+            .navbar {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            h1 { font-size: 2.2rem; }
+            .section-card { padding: 30px; }
+        }
+
+        .text-content {
+            padding-right: 10px;
+        }
+
+        .meta-header {
+            color: var(--accent-cyan); 
+            font-family: var(--font-display); 
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: inline-block;
+            border-bottom: 1px dashed var(--accent-cyan);
+            padding-bottom: 5px;
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+        }
+
+        .visual-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+        }
+
+        .img-box {
+            border: 1px solid #444;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            height: 350px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border-radius: 4px;
+        }
+
+        .img-box::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0.2));
+            pointer-events: none;
+        }
+
+        .img-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(60%) contrast(1.1);
+            transition: filter 0.5s;
+        }
+
+        .section-card:hover .img-box img {
+            filter: grayscale(0%) contrast(1);
+        }
+
+        .mixed-media-note {
+            background: rgba(20, 20, 20, 0.6);
+            border: 1px solid #333;
+            border-left: 3px solid var(--accent-amber);
+            color: #aaa;
+            padding: 20px;
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+        
+        .mixed-media-note strong { color: var(--accent-amber); }
+
+        .profile-stats {
+            background: rgba(0, 243, 255, 0.05);
+            padding: 25px;
+            border: 1px solid var(--accent-cyan);
+            font-family: var(--font-display);
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .profile-stats p { margin: 8px 0; font-family: var(--font-display); font-size: 0.9rem; }
+        .profile-stats strong { color: var(--accent-cyan); }
+
+        .verified-stamp {
+            color: var(--accent-cyan); 
+            font-size: 30px; 
+            border: 4px solid var(--accent-cyan); 
+            padding: 15px 30px; 
+            transform: rotate(-10deg);
+            font-weight: bold;
+            opacity: 0.9;
+            animation: pulse 3s infinite;
+            text-shadow: 0 0 10px var(--accent-cyan);
+            box-shadow: 0 0 10px var(--accent-cyan), inset 0 0 10px var(--accent-cyan);
+            font-family: var(--font-display);
+        }
+
+        .error-screen {
+            color: var(--accent-red); 
+            font-size: 18px; 
+            text-align: center;
+            font-family: var(--font-display);
+            animation: pulse 1s infinite;
+            text-shadow: 0 0 5px var(--accent-red);
+        }
+
+        .radio-log {
+            color: #000; 
+            font-family: var(--font-display);
+            padding: 25px;
+            background: #f0f0f0;
+            width: 100%;
+            height: 100%;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            position: relative;
+        }
+        
+        .radio-log::before {
+            content: 'CONFIDENTIAL';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 3rem;
+            color: rgba(0,0,0,0.1);
+            font-weight: bold;
+            border: 5px solid rgba(0,0,0,0.1);
+            padding: 10px;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+
+        .footer {
+            text-align: center;
+            padding: 60px 0;
+            border-top: 1px solid #333;
+            color: #555;
+            margin-top: 40px;
+            background: #000;
+            font-family: var(--font-display);
+        }
+
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-cyan); }
+
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="scanlines"></div>
+
+    <nav class="navbar">
+        <a href="#home">HOME</a>
+        <a href="#profile">ID: COLE MILES</a>
+        <a href="#work">LOG: WORK</a>
+        <a href="#relationships">LOG: SOCIAL</a>
+        <a href="#news">LOG: NEWS</a>
+        <a href="#arts">LOG: ARTS</a>
+    </nav>
+
+    <div class="container">
+
+        <section id="home" style="text-align: center; padding: 120px 20px; margin-bottom: 60px;">
+            <h1>The Analog Anchor</h1>
+            <p style="font-family: var(--font-display); color: var(--accent-cyan); font-size: 1.2rem; letter-spacing: 3px;">ADAPTING TO THE DEAD INTERNET // YEAR 2040</p>
+            <div style="margin-top: 50px; border: 1px solid #333; display: inline-block; padding: 15px 40px; color: #aaa; background: rgba(0,0,0,0.5); font-family: var(--font-display);">
+                STUDENT ARCHIVE: COLE MILES // STATUS: ONLINE
+            </div>
+        </section>
+
+        <!-- PROFILE SECTION (Always Visible) -->
+        <section id="profile" class="section-card">
+            <h2>Character Profile <span class="section-number">01 / FILE</span></h2>
+            <div class="grid-2">
+                <div class="visual-container">
+                    <div class="img-box" style="border: 2px solid var(--accent-cyan); height: 400px;">
+                        <img src="data:image/jpeg;base64,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" onerror="this.src='https://placehold.co/400x400/111/00f3ff?text=NO+IMAGE+DATA'">
+                    </div>
+                </div>
+                <div class="text-content">
+                    <div class="profile-stats">
+                        <p><strong>AGE:</strong> 32</p>
+                        <p><strong>LOCATION:</strong> Faraday District, AL</p>
+                        <p><strong>JOB:</strong> Provenance Auditor</p>
+                        <p><strong>TECH:</strong> "Cold-Slate" Tablet (Mesh Only)</p>
+                        <p><strong>TRUST:</strong> Zero. "Bio-Hash" verification only.</p>
+                    </div>
+                    <br>
+                    <p><strong>Job Description:</strong> In a world where 90% of emails and videos are AI "Slop," I physically verify that products and people exist. I am a paid human witness.</p>
+                    <p><strong>Tools:</strong> "The Anchor" (Identity Ring) & Paper Archives.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ENTRY 1: LOCKED -->
+        <section id="work" class="section-card">
+            <h2>Entry 01: Education & Work <span class="section-number">02 / LOG</span></h2>
+            
+            <!-- Lock Screen -->
+            <div class="encrypted-lock" id="lock-work" onclick="toggleLog('work')">
+                <i class="fa-solid fa-lock lock-icon"></i>
+                <div class="lock-text">ENCRYPTED // SECURITY LEVEL 5</div>
+                <button class="decrypt-btn">[ DECRYPT LOG ]</button>
+            </div>
+
+            <!-- Content (Hidden) -->
+            <div class="entry-data grid-2">
+                <div class="text-content">
+                    <span class="meta-header">DATE: MARCH 14, 2040 // TOPIC: THE AUTHENTICITY CRISIS</span>
+                    <p>I had a tough audit today at the University. A history professor hired me to verify a student's thesis paper. The student claimed they wrote it, but the University’s AI-checkers were flagging it as "synthetic." It’s ironic—the AI checkers are usually wrong because they were trained on older AI data. It’s an endless loop of machines shouting at machines, and nobody knows what the baseline for truth is anymore.</p>
+                    <p>I had to do a "Cognitive Interview." I sat in a soundproof room with the student for three hours—no screens, no devices, just talking about the subject face-to-face. That’s the only way to grade now. You can’t grade the text; you have to grade the human.</p>
+                    <p>The student was brilliant, actually. He stumbled over his words, got frustrated when he couldn't find the right phrasing, and made weird, messy connections between the history topic and his own life. That’s how I knew he was real. AI is too smooth, too perfect. Human intelligence is jagged and full of strange detours. I stamped his paper "Bio-Verified" with my ring.</p>
+                </div>
+                <div class="visual-container">
+                    <div class="img-box" style="border-color: var(--accent-cyan); height: 250px;">
+                        <div class="verified-stamp">VERIFIED</div>
+                    </div>
+                    <div class="mixed-media-note">
+                        > MIXED MEDIA ELEMENT:<br>
+                        Photo of a paper document with a physical wax seal or ink stamp: "HUMAN VERIFIED: 99.8% PROBABILITY."
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ENTRY 2: LOCKED -->
+        <section id="relationships" class="section-card">
+            <h2>Entry 02: Human Relationships <span class="section-number">03 / LOG</span></h2>
+            
+            <div class="encrypted-lock" id="lock-relationships" onclick="toggleLog('relationships')">
+                <i class="fa-solid fa-lock lock-icon"></i>
+                <div class="lock-text">ENCRYPTED // SECURITY LEVEL 5</div>
+                <button class="decrypt-btn">[ DECRYPT LOG ]</button>
+            </div>
+
+            <div class="entry-data grid-2">
+                <div class="visual-container">
+                    <div class="img-box" style="border-color: var(--accent-red); height: 250px;">
+                        <div class="error-screen">[ VIDEO SIGNAL LOST ]<br>ERROR: 404 BIOMETRIC FAIL</div>
+                    </div>
+                    <div class="mixed-media-note" style="border-color: var(--accent-red); color: var(--accent-red); border-left-color: var(--accent-red);">
+                        > MIXED MEDIA ELEMENT:<br>
+                        Screenshot of a "Video Call" with face glitching. Overlay: "WARNING: BIOMETRIC MISMATCH."
+                    </div>
+                </div>
+                <div class="text-content">
+                    <span class="meta-header">DATE: APRIL 2, 2040 // TOPIC: THE HANDSHAKE PROTOCOL</span>
+                    <p>My sister sent me a video message today saying she was in trouble and needed credits transferred immediately. The video quality was crystal clear. The voice was hers, right down to the specific cadence she uses when she's stressed. The face was hers. It even had that little scar on her chin from when we were kids falling off the swing set.</p>
+                    <p>I almost sent the money. My finger was hovering over the transfer button. Almost.</p>
+                    <p>But then I remembered the Protocol. We established it five years ago when the Deepfakes took over the banking sector. I asked the video, "What color was the bicycle Dad bought me?" The video paused for a microsecond—a server lag as it processed the query—and then the eyes glazed over. "The bicycle was red," the bot said smoothly.</p>
+                    <p>Wrong. I never had a bicycle.</p>
+                    <p>I hung up immediately. It wasn't my sister. It was a phishing bot that scraped our old family photos from the Cloud Archives. I felt sick to my stomach.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ENTRY 3: LOCKED -->
+        <section id="news" class="section-card">
+            <h2>Entry 03: News & Global Events <span class="section-number">04 / LOG</span></h2>
+            
+            <div class="encrypted-lock" id="lock-news" onclick="toggleLog('news')">
+                <i class="fa-solid fa-lock lock-icon"></i>
+                <div class="lock-text">ENCRYPTED // SECURITY LEVEL 5</div>
+                <button class="decrypt-btn">[ DECRYPT LOG ]</button>
+            </div>
+
+            <div class="entry-data grid-2">
+                <div class="text-content">
+                    <span class="meta-header">DATE: JUNE 12, 2040 // TOPIC: THE WEATHER WARS</span>
+                    <p>The Internet is screaming that Florida is underwater. If you log onto the Global Net right now, there are thousands of 4K videos of Miami being swallowed by a massive tidal wave. The hashtags are trending worldwide. The panic is "viral" in the truest sense of the word—it's infecting everyone.</p>
+                    <p>But I turned on my Ham Radio—the old analog set I bought at a flea market. I tuned into the frequency for the "Southern Truth Alliance," a network of actual humans using shortwave radio to report on local conditions.</p>
+                    <p>"Skies are clear in Miami," the operator said, his voice crackling through the static. "Repeat: Skies are clear. The videos are a simulation attack by a short-selling hedge fund trying to crash the insurance market."</p>
+                    <p>It’s terrifying. Millions of people are panicking right now because they trust the screen in their pocket more than the reality outside their window. We call this a "Reality Fork."</p>
+                </div>
+                <div class="visual-container">
+                    <div class="img-box" style="height: 250px; background: #fff; border: none;">
+                         <div class="radio-log">
+                             LOG: 140.55 MHz<br>
+                             SOURCE: MIAMI_OP<br>
+                             STATUS: ALL CLEAR.<br>
+                             VISUAL: SUNNY. NO FLOOD.
+                         </div>
+                    </div>
+                    <div class="mixed-media-note">
+                        > MIXED MEDIA ELEMENT:<br>
+                        Split image: Sleek AI disaster headline vs Messy handwritten radio logbook.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ENTRY 4: LOCKED -->
+        <section id="arts" class="section-card">
+            <h2>Entry 04: Free Choice (The Arts) <span class="section-number">05 / LOG</span></h2>
+            
+            <div class="encrypted-lock" id="lock-arts" onclick="toggleLog('arts')">
+                <i class="fa-solid fa-lock lock-icon"></i>
+                <div class="lock-text">ENCRYPTED // SECURITY LEVEL 5</div>
+                <button class="decrypt-btn">[ DECRYPT LOG ]</button>
+            </div>
+
+            <div class="entry-data grid-2">
+                <div class="visual-container">
+                    <div class="img-box" style="height: 250px;">
+                        <i class="fa-solid fa-record-vinyl" style="font-size: 100px; color: #333;"></i>
+                    </div>
+                    <div class="mixed-media-note">
+                        > MIXED MEDIA ELEMENT:<br>
+                        Sketch of a vinyl record player with a note: "Imperfection = Humanity."
+                    </div>
+                </div>
+                <div class="text-content">
+                    <span class="meta-header">DATE: JULY 4, 2040 // TOPIC: THE FLAW IS THE ART</span>
+                    <p>I went to a "Raw" concert last night. This is the biggest underground trend right now. No speakers, no microphones, no auto-tune, and definitely no holograms. It was just a guy with an acoustic guitar sitting on a stool in a dusty warehouse.</p>
+                    <p>The entry fee was high—physical cash only. No crypto, no bio-credits.</p>
+                    <p>When he started playing, he missed a chord within the first minute. Later, his voice cracked on a high note. The audience went silent, and then... everyone started crying. It sounds stupid, I know. But we are so starved for *imperfection*. The AI music that floods the streams is mathematically perfect. It hits every dopamine receptor exactly right. It’s addictive, but it has no soul.</p>
+                    <p>Hearing that voice crack? It was the most beautiful thing I’ve heard all year. It proved he was struggling. It proved he was feeling it. In a world of synthetic perfection, a mistake is the only proof that you're alive.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p style="font-size: 0.9rem;">END OF ARCHIVE // TRUST LEVEL: VERIFIED</p>
+        </div>
+
+    </div>
+
+    <script>
+        function toggleLog(sectionId) {
+            const section = document.getElementById(sectionId);
+            const lock = section.querySelector('.encrypted-lock');
+            const content = section.querySelector('.entry-data');
+
+            // Hide the lock
+            lock.style.display = 'none';
+            
+            // Show content with animation class
+            content.classList.add('active');
+        }
+    </script>
+
+</body>
+</html>
